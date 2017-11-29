@@ -1,0 +1,109 @@
+#!/bin/bash
+#
+# This script runs `dumpwallet` by safely unlocking the encrypted wallet.
+# See: https://bitcoin.org/en/developer-reference#dumpwallet
+# If necessary, prompt user for a custom data directory...in this context, we will not
+# be using a custom data directory, so leave this variable set to false.
+# Note that port 8332 needs to be open to allow bitcoin-cli to communicate with bitcoind.
+# By default, this port is closed in TAILS - so we need to add an appropriate
+# iptables rule.
+# ------------------------------------------------------------------------------
+set -o nounset
+set -o errexit
+THIS=$(readlink -f ${BASH_SOURCE[0]})
+PROJECT_ROOT=$(dirname $THIS)
+. $PROJECT_ROOT/setup-cold-wallet
+NAME=$0
+CUSTOM_DATA_DIR='false'
+
+# Open port.
+# ------------------------------------------------------------------------------
+function open_port {
+  sudo iptables -I OUTPUT -d 127.0.0.1/32 -o lo -p tcp -m tcp --dport 8332 --tcp-flags FIN,SYN,RST,ACK SYN -m owner --uid-owner 1000 -j ACCEPT
+}
+
+# Start the Bitcoin daemon.
+# bitcoind command is set up by the `launch-cold-wallet` script
+# ------------------------------------------------------------------------------
+function start_bitcoind {
+  echo "Starting bitcoind in the background..."
+  (${COIN}d -wallet=cold-wallet.dat -daemon)
+}
+
+# Unlock the wallet.
+# ------------------------------------------------------------------------------
+function unlock {
+  echo "Please enter the wallet passphrase: "
+  read -s WALLET_PASSPHRASE
+  echo "Unlocking wallet..."
+   ${COIN}-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
+}
+
+# Use bitcoin-cli dumpwallet command to output private keys.
+# ------------------------------------------------------------------------------
+function dump_keys {
+  DATE=$(date "+%Y-%m-%d-%H:%M:%S")
+  DUMP_DIR=~/${COIN}-dumpwallet-${DATE}
+  mkdir -p ${DUMP_DIR}
+  #FULL_WALLET_DUMP=${DUMP_DIR}/full-wallet-dump
+  #FILTERED_WALLET_DUMP=${DUMP_DIR}/filtered-wallet-dump
+  SELECT_WALLET_DUMP=${DUMP_DIR}/select-wallet-dump
+
+  echo "Select a File that contains a list of public addresses to backup."
+
+  PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
+  case $? in
+    0)
+    echo "\"${PUB_ADDRESSES_LIST}\" selected.";;
+    1)
+    echo "No file selected.";;
+    -1)
+    echo "An unexpected error has occurred.";;
+  esac
+
+  echo "Wallet Backup: ${DATE}" > ${SELECT_WALLET_DUMP}
+  PUB_ADDRESSES="$(< ${PUB_ADDRESSES_LIST})"
+  for PUB in $PUB_ADDRESSES; do
+    PRIV=$(${COIN}-cli dumpprivkey ${PUB})
+    echo "Public: ${PUB} Private: ${PRIV}" >> ${SELECT_WALLET_DUMP}
+  done
+
+
+  #echo "Dumping Keys..."
+  #${COIN}-cli dumpwallet ${FULL_WALLET_DUMP}
+  #grep -E 'change|label' $PWD/full-wallet-dump > ${FILTERED_WALLET_DUMP}
+  ${COIN}-cli walletlock
+  ${COIN}-cli stop
+  echo "Your dumped keys:"
+  echo "${SELECT_WALLET_DUMP}"
+  #echo "Full dump: ${FULL_WALLET_DUMP}"
+  #echo "Filtered for change|label: ${FILTERED_WALLET_DUMP}"
+}
+
+# Use GPG to symmetrically encrypt the dumped wallet data files, then securely
+# delete the originals using the shred utility. Use a high-quality passphrase.
+# ------------------------------------------------------------------------------
+function encrypt_keyfiles_and_cleanup {
+  echo "${NAME} - Encrypting wallet outputs..."
+  gpg --armor --output ${SELECT_WALLET_DUMP}.gpg --symmetric ${SELECT_WALLET_DUMP}
+  echo "${NAME} - Securely deleting the plaintext wallet dumps using shred..."
+  shred -vfzu ${SELECT_WALLET_DUMP}
+  echo "Note that if you open the encrypted files in TAILS, they will be automatically decrypted."
+}
+
+# Execute
+# ------------------------------------------------------------------------------
+read -p "Do you want to do unlock the wallet and dump keys? [y/N]" YN
+case $YN in
+  [Yy]* )
+  open_port
+  start_bitcoind
+  unlock
+  dump_keys
+  encrypt_keyfiles_and_cleanup
+  ;;
+  [Nn]* )
+  echo "END."
+  ;;
+  * ) echo "Please answer yes or no.";;
+esac

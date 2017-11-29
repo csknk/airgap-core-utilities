@@ -1,0 +1,13 @@
+#!/bin/bash
+# ------------------------------------------------------------------------------
+set -o nounset
+set -o errexit
+THIS=$(readlink -f ${BASH_SOURCE[0]})
+PROJECT_ROOT=$(dirname $THIS)
+. $PROJECT_ROOT/lib/setup-binaries
+. $PROJECT_ROOT/lib/config
+NAME=$0
+
+setup_binaries
+
+${COIN}-qt

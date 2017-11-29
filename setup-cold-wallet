@@ -1,0 +1,68 @@
+#!/bin/bash
+# Open a Bitcoin Core or Litecoin core cold wallet in an offline Tails session.
+
+set -o nounset
+set -o errexit
+# ------------------------------------------------------------------------------
+# Include dependencies.
+# ------------------------------------------------------------------------------
+THIS=$(readlink -f ${BASH_SOURCE[0]})
+PROJECT_ROOT=$(dirname $THIS)
+. $PROJECT_ROOT/lib/setup-binaries
+. $PROJECT_ROOT/lib/config
+
+function set_cold_wallet {
+  WALLET_FILE=$(zenity --file-selection --title="Select a Cold Wallet to run." --filename=${PWD})
+  case $? in
+    0)
+    echo "\"$WALLET_FILE\" selected.";;
+    1)
+    echo "No file selected.";;
+    -1)
+    echo "An unexpected error has occurred.";;
+  esac
+}
+
+function open_port {
+  sudo iptables -I OUTPUT -d 127.0.0.1/32 -o lo -p tcp -m tcp --dport 8332 --tcp-flags FIN,SYN,RST,ACK SYN -m owner --uid-owner 1000 -j ACCEPT
+}
+
+function copy_wallet {
+  if [[ ${OPT} == "Bitcoin" ]]; then
+    DATA_DIR=~/.bitcoin
+  elif [[ ${OPT} == "Litecoin" ]]; then
+    DATA_DIR=~/.litecoin
+  fi
+  if [[ ! -d "${DATA_DIR}" ]]; then
+    echo "Creating ${DATA_DIR}..."
+    mkdir ${DATA_DIR}
+  fi
+  if [[ "${DATA_DIR}"/cold-wallet.dat ]]; then
+    echo "Remove exisiting cold wallet, ${DATA_DIR}/cold-wallet.dat"
+    rm -f ${DATA_DIR}/cold-wallet.dat
+  fi
+  echo "Make a copy of ${DATA_DIR}/cold-wallet.dat from ${WALLET_FILE}"
+  cp ${WALLET_FILE} ${DATA_DIR}/cold-wallet.dat
+}
+
+function run_wallet {
+  echo "Starting ${OPT} Core with wallet ${WALLET_FILE}"
+  ${COIN}-cli -wallet=cold-wallet.dat
+}
+
+# Run this script
+# ------------------------------------------------------------------------------
+echo "ONLY RUN IN A COLD ENVIRONMENT."
+read -p "Do you wish to proceed? [y/N]" PROCEED
+case $PROCEED in
+  [Yy]* )
+  setup_binaries # See /lib/setup-binaries
+  set_cold_wallet
+  copy_wallet
+  #run_wallet
+  ;;
+  [Nn]* )
+  echo "END"
+  ;;
+  * ) echo "Please answer yes or no.";;
+esac

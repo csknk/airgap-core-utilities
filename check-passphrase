@@ -1,0 +1,42 @@
+#!/bin/bash
+# This script allows you to check your wallet passphrase without exposing it to
+# the screen or adding it to the BASH history.
+#
+# Obfuscation alone is not good security.
+# ------------------------------------------------------------------------------
+set -o nounset
+set -o errexit
+PROJECT_ROOT=$(dirname $THIS)
+. $PROJECT_ROOT/lib/setup-cold-wallet
+NAME=$0
+
+function get_passphrase() {
+  echo "Please enter the wallet passphrase:"
+  read -s WALLET_PASSPHRASE
+}
+
+function check_passphrase() {
+  bitcoin-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
+  if [[ $? -eq 0  ]]; then
+    echo "+-------------------------------------+"
+    echo "| You entered the CORRECT passphrase. |"
+    echo "+-------------------------------------+"
+    # Lock wallet
+    echo "Locking wallet..."
+    bitcoin-cli walletlock
+    if [[ $? -eq 0  ]]; then
+      echo "Wallet is LOCKED."
+    else
+      echo "Problem locking wallet."
+    fi
+  else
+    echo "+--------------------------------------+"
+    echo "| You entered an incorrect passphrase. |"
+    echo "+--------------------------------------+"
+  fi
+}
+open_port
+(bitcoind -daemon)
+get_passphrase
+check_passphrase
+bitcoin-cli stop

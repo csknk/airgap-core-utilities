@@ -1,0 +1,3 @@
+#!/bin/bash
+BITCOIN_CORE_BIN_DIR="${PROJECT_ROOT}/bitcoin-0.15.1/bin"
+LITECOIN_CORE_BIN_DIR="${PROJECT_ROOT}/litecoin-0.15.0/bin"
