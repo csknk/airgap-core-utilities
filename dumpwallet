@@ -23,13 +23,6 @@ function open_port {
   sudo iptables -I OUTPUT -d 127.0.0.1/32 -o lo -p tcp -m tcp --dport 8332 --tcp-flags FIN,SYN,RST,ACK SYN -m owner --uid-owner 1000 -j ACCEPT
 }
 
-# Start the Bitcoin daemon: bitcoind command is set up by the `launch-cold-wallet` script
-# ------------------------------------------------------------------------------
-function start_bitcoind {
-  echo "Starting bitcoind in the background..."
-  (${COIN}d -wallet=cold-wallet.dat -daemon)
-}
-
 # Unlock the wallet.
 # ------------------------------------------------------------------------------
 function unlock {

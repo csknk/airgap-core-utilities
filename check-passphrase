@@ -6,9 +6,9 @@
 # ------------------------------------------------------------------------------
 set -o nounset
 set -o errexit
+
 PROJECT_ROOT=$(dirname $THIS)
 . $PROJECT_ROOT/lib/setup-cold-wallet
-NAME=$0
 
 function get_passphrase() {
   echo "Please enter the wallet passphrase:"
@@ -18,10 +18,11 @@ function get_passphrase() {
 function check_passphrase() {
   bitcoin-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
   if [[ $? -eq 0  ]]; then
-    echo "+-------------------------------------+"
-    echo "| You entered the CORRECT passphrase. |"
-    echo "+-------------------------------------+"
-    # Lock wallet
+    echo -e ${YELLOW}
+    echo "+-------------------------------------------------------------------+"
+    echo "| You entered the CORRECT passphrase.                               |"
+    echo "+-------------------------------------------------------------------+"
+    echo -e ${NC}
     echo "Locking wallet..."
     bitcoin-cli walletlock
     if [[ $? -eq 0  ]]; then
@@ -30,13 +31,15 @@ function check_passphrase() {
       echo "Problem locking wallet."
     fi
   else
-    echo "+--------------------------------------+"
-    echo "| You entered an incorrect passphrase. |"
-    echo "+--------------------------------------+"
+    echo -e ${RED}
+    echo "+-------------------------------------------------------------------+"
+    echo "| You entered an INCORRECT passphrase.                              |"
+    echo "+-------------------------------------------------------------------+"
+    echo -e ${NC}
   fi
 }
 open_port
-(bitcoind -daemon)
+start_bitcoind
 get_passphrase
 check_passphrase
 bitcoin-cli stop
