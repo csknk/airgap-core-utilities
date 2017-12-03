@@ -41,11 +41,7 @@ function set_binary_dir {
 # ------------------------------------------------------------------------------
 function set_commands {
   echo -e ${YELLOW}
-  echo "+---------------------------------------------------------------------+"
-  echo "|                                                                     |"
-  echo "| WARNING. Overwriting symlinks to ${OPT} binaries.                   |"
-  echo "|                                                                     |"
-  echo "+---------------------------------------------------------------------+"
+  echo " WARNING. Overwriting symlinks to ${OPT} binaries."
   echo -e ${NC}
 
   read -p "Do you wish to proceed? [y/N]" PROCEED
@@ -73,7 +69,6 @@ function set_commands {
 }
 
 function setup_binaries {
-  #select_coin
   set_binary_dir
   set_commands
 }
