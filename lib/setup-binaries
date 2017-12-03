@@ -7,27 +7,9 @@
 set -o nounset
 set -o errexit
 
-function select_coin {
-  TITLE="Select a Core Client to Use"
-  PROMPT="Pick an option:"
-  OPTIONS=("Bitcoin" "Litecoin")
-  echo "$TITLE"
-  PS3="$PROMPT "
-  select OPT in "${OPTIONS[@]}" "Quit"; do
-    case "$REPLY" in
-      1) break;;
-      2) break;;
-      $((${#OPTIONS[@]}+1))) echo "End"; break;;
-      *) echo "Invalid option. Try again.";
-      continue;;
-    esac
-  done
-  echo "You selected $OPT."
-  COIN="${OPT,,}"
-}
-
 # If a value for the directory path to the binary files has not been set, use
 # Zenity to allow the user to select it.
+# ------------------------------------------------------------------------------
 function set_binary_dir {
   if [[ ${OPT} == "Bitcoin" ]]; then
     CORE_DIR=${BITCOIN_CORE_BIN_DIR}
@@ -56,10 +38,16 @@ function set_binary_dir {
 }
 
 # Set up commands for daemon, command line client and GUI.
+# ------------------------------------------------------------------------------
 function set_commands {
-  echo "-------------------------------------------------"
-  echo "WARNING. OVERWRITING SYMLINKS TO ${OPT} BINARIES."
-  echo "-------------------------------------------------"
+  echo -e ${YELLOW}
+  echo "+---------------------------------------------------------------------+"
+  echo "|                                                                     |"
+  echo "| WARNING. Overwriting symlinks to ${OPT} binaries.                   |"
+  echo "|                                                                     |"
+  echo "+---------------------------------------------------------------------+"
+  echo -e ${NC}
+
   read -p "Do you wish to proceed? [y/N]" PROCEED
   case $PROCEED in
     [Yy]* )
@@ -85,7 +73,7 @@ function set_commands {
 }
 
 function setup_binaries {
-  select_coin
+  #select_coin
   set_binary_dir
   set_commands
 }

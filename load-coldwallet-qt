@@ -1,5 +1,7 @@
 #!/bin/bash
+
 # ------------------------------------------------------------------------------
+
 set -o nounset
 set -o errexit
 
@@ -12,5 +14,7 @@ PROJECT_ROOT=$(dirname $THIS)
 
 select_coin
 setup_binaries
+select_cold_wallet
+copy_wallet
 
-${COIN}-qt
+${COIN}-qt -wallet=cold-wallet.dat

@@ -47,14 +47,6 @@ case $PROCEED in
   * ) echo "Please answer yes or no.";;
 esac
 
-# Silently read the passphrase
-# ------------------------------------------------------------------------------
-function get_passphrase {
-  echo "Please enter the wallet passphrase:"
-  read -s WALLET_PASSPHRASE
-}
-
-
 # Unlock the wallet.
 # ------------------------------------------------------------------------------
 function unlock {
@@ -70,23 +62,41 @@ function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
   DUMP_DIR=~/${COIN}-dumpwallet-${DATE}
   mkdir -p ${DUMP_DIR}
-  WALLET_DUMP=${DUMP_DIR}/wallet-dump  
-  ${COIN}-cli dumpwallet ${WALLET_DUMP}
+  SELECT_WALLET_DUMP=${DUMP_DIR}/select-wallet-dump
+
+  echo "Select a File that contains a list of public addresses to backup."
+  PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
+  case $? in
+    0)
+    echo "\"${PUB_ADDRESSES_LIST}\" selected.";;
+    1)
+    echo "No file selected.";;
+    -1)
+    echo "An unexpected error has occurred.";;
+  esac
+
+  echo "Wallet Backup: ${DATE}" > ${SELECT_WALLET_DUMP}
+  PUB_ADDRESSES="$(< ${PUB_ADDRESSES_LIST})"
+  for PUB in $PUB_ADDRESSES; do
+    PRIV=$(${COIN}-cli dumpprivkey ${PUB})
+    echo "Public: ${PUB} Private: ${PRIV}" >> ${SELECT_WALLET_DUMP}
+  done
+
   ${COIN}-cli walletlock
   ${COIN}-cli stop
-  echo "Your dumped wallet:"
-  echo "${WALLET_DUMP}"
+  echo "Your dumped keys:"
+  echo "${SELECT_WALLET_DUMP}"
 }
 
 # Use GPG to symmetrically encrypt the dumped wallet data files, then securely
-# delete the originals using the shred utility. Use a high-quality passphrase.
+# delete the originals using the shred utility.
 # ------------------------------------------------------------------------------
 function encrypt_keyfiles_and_cleanup {
-  echo "${NAME} - Encrypting wallet outputs..."
-  gpg --armor --output ${WALLET_DUMP}.gpg --symmetric ${WALLET_DUMP}
+  echo "${NAME} - Encrypting wallet outputs. Use a high-quality passphrase when prompted..."
+  gpg --armor --output ${SELECT_WALLET_DUMP}.gpg --symmetric ${SELECT_WALLET_DUMP}
   echo "${NAME} - Securely deleting the plaintext wallet dumps using shred..."
-  shred -vfzu ${WALLET_DUMP}
-  echo "Note that if you open the encrypted files in TAILS, they will be automatically decrypted."
+  shred -vfzu ${SELECT_WALLET_DUMP}
+  echo "Note that if you open the encrypted file in TAILS during the current session, it will be automatically decrypted."
 }
 
 # Execute
