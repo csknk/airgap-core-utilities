@@ -40,6 +40,7 @@ case $PROCEED in
   [Yy]* )
     select_cold_wallet
     copy_wallet
+    WALLET_NAME=$(basename "${WALLET_FILE}")
   ;;
   [Nn]* )
     echo "END"
@@ -56,14 +57,18 @@ function unlock {
    ${COIN}-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
 }
 
-# Use bitcoin-cli dumpwallet command to output private keys.
+# Use bitcoin-cli dumpprivkey command to output private keys for specified public
+# addresses.
+#
+# The private key for each address is encrypted into a file whose filename
+# corresponds to the public address. Uses GPG to symmetrically encrypt the dumped
+# private key files, then securely deletes the originals using the shred utility.
 # ------------------------------------------------------------------------------
 function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
-  DUMP_DIR=~/${COIN}-dumpwallet-${DATE}
-  mkdir -p ${DUMP_DIR}
-  SELECT_WALLET_DUMP=${DUMP_DIR}/select-wallet-dump
+  DUMP_DIR=~/${COIN}-dumpwallet-${WALLET_NAME}
 
+  mkdir -p ${DUMP_DIR}
   echo "Select a File that contains a list of public addresses to backup."
   PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
   case $? in
@@ -75,28 +80,26 @@ function dump_keys {
     echo "An unexpected error has occurred.";;
   esac
 
-  echo "Wallet Backup: ${DATE}" > ${SELECT_WALLET_DUMP}
+  echo "Key Backups: ${WALLET_NAME}, ${DATE}" > ${DUMP_DIR}/readme.md
+  echo "============================================" >> ${DUMP_DIR}/readme.md
+  echo "This directory contains private keys for the following public addresses:" >> ${DUMP_DIR}/readme.md
+
+  echo "Enter a passphrase for GPG encryption:"
+  read -s GPG_PASS
+
   PUB_ADDRESSES="$(< ${PUB_ADDRESSES_LIST})"
   for PUB in $PUB_ADDRESSES; do
     PRIV=$(${COIN}-cli dumpprivkey ${PUB})
-    echo "Public: ${PUB} Private: ${PRIV}" >> ${SELECT_WALLET_DUMP}
+    echo "${PUB}" >> ${DUMP_DIR}/readme.md
+    echo "${PRIV}" > ${DUMP_DIR}/${PUB}
+    gpg --armor --output ${DUMP_DIR}/${PUB}.gpg --batch --passphrase ${GPG_PASS} --symmetric ${DUMP_DIR}/${PUB}
+    shred -vfzu ${DUMP_DIR}/${PUB}
   done
 
   ${COIN}-cli walletlock
   ${COIN}-cli stop
   echo "Your dumped keys:"
-  echo "${SELECT_WALLET_DUMP}"
-}
-
-# Use GPG to symmetrically encrypt the dumped wallet data files, then securely
-# delete the originals using the shred utility.
-# ------------------------------------------------------------------------------
-function encrypt_keyfiles_and_cleanup {
-  echo "${NAME} - Encrypting wallet outputs. Use a high-quality passphrase when prompted..."
-  gpg --armor --output ${SELECT_WALLET_DUMP}.gpg --symmetric ${SELECT_WALLET_DUMP}
-  echo "${NAME} - Securely deleting the plaintext wallet dumps using shred..."
-  shred -vfzu ${SELECT_WALLET_DUMP}
-  echo "Note that if you open the encrypted file in TAILS during the current session, it will be automatically decrypted."
+  echo "${DUMP_DIR}"
 }
 
 # Execute
@@ -108,7 +111,6 @@ case $YN in
   start_daemon
   unlock
   dump_keys
-  encrypt_keyfiles_and_cleanup
   ;;
   [Nn]* )
   echo "END."
