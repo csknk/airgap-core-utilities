@@ -21,39 +21,30 @@ NAME=$0
 CUSTOM_DATA_DIR='false'
 
 read -p "Set up Binaries? [y/N]" PROCEED_BINARIES
-
 case $PROCEED_BINARIES in
   [Yy]* )
-    select_coin
-    setup_binaries
+  select_coin
+  setup_binaries
   ;;
   [Nn]* )
-    echo "Proceeding without setup of binaries..."
-    select_coin
+  echo "Proceeding without setup of binaries..."
+  select_coin
   ;;
   * ) echo "Please answer yes or no.";;
 esac
 
 read -p "Do you wish to set up a cold wallet? [y/N]" PROCEED
-
 case $PROCEED in
   [Yy]* )
-    select_cold_wallet
-    copy_wallet
+  select_cold_wallet
+  copy_wallet
+  WALLET_NAME=$(basename "${WALLET_FILE}")
   ;;
   [Nn]* )
-    echo "END"
+  echo "END"
   ;;
   * ) echo "Please answer yes or no.";;
 esac
-
-# Silently read the passphrase
-# ------------------------------------------------------------------------------
-function get_passphrase {
-  echo "Please enter the wallet passphrase:"
-  read -s WALLET_PASSPHRASE
-}
-
 
 # Unlock the wallet.
 # ------------------------------------------------------------------------------
@@ -61,32 +52,49 @@ function unlock {
   echo "Please enter the wallet passphrase: "
   read -s WALLET_PASSPHRASE
   echo "Unlocking wallet..."
-   ${COIN}-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
+  ${COIN}-cli -wallet=cold-wallet.dat -rpcwait walletpassphrase "${WALLET_PASSPHRASE}" 600
 }
 
 # Use bitcoin-cli dumpwallet command to output private keys.
 # ------------------------------------------------------------------------------
 function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
-  DUMP_DIR=~/${COIN}-dumpwallet-${DATE}
+  DUMP_DIR=~/${COIN}-dumpwallet-${WALLET_NAME}
+
   mkdir -p ${DUMP_DIR}
-  WALLET_DUMP=${DUMP_DIR}/wallet-dump  
-  ${COIN}-cli dumpwallet ${WALLET_DUMP}
+  echo "Select a File that contains a list of public addresses to backup."
+  PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
+  case $? in
+    0)
+    echo "\"${PUB_ADDRESSES_LIST}\" selected.";;
+    1)
+    echo "No file selected.";;
+    -1)
+    echo "An unexpected error has occurred.";;
+  esac
+
+  echo "Key Backups: ${WALLET_NAME}, ${DATE}" > ${DUMP_DIR}/readme.md
+  echo "============================================" >> ${DUMP_DIR}/readme.md
+  echo "This directory contains private keys for the following public addresses:" >> ${DUMP_DIR}/readme.md
+
+  echo "Enter a passphrase for GPG encryption:"
+  read -s GPG_PASS
+
+  PUB_ADDRESSES="$(< ${PUB_ADDRESSES_LIST})"
+
+  for PUB in $PUB_ADDRESSES; do
+    PRIV=$(${COIN}-cli dumpprivkey ${PUB})
+    echo "${PUB}" >> ${DUMP_DIR}/readme.md
+    echo "${PRIV}" > ${DUMP_DIR}/${PUB}
+    gpg --armor --output ${DUMP_DIR}/${PUB}.gpg --batch --passphrase ${GPG_PASS} --symmetric ${DUMP_DIR}/${PUB}
+    shred -vfzu ${DUMP_DIR}/${PUB}
+
+  done
+
   ${COIN}-cli walletlock
   ${COIN}-cli stop
-  echo "Your dumped wallet:"
-  echo "${WALLET_DUMP}"
-}
-
-# Use GPG to symmetrically encrypt the dumped wallet data files, then securely
-# delete the originals using the shred utility. Use a high-quality passphrase.
-# ------------------------------------------------------------------------------
-function encrypt_keyfiles_and_cleanup {
-  echo "${NAME} - Encrypting wallet outputs..."
-  gpg --armor --output ${WALLET_DUMP}.gpg --symmetric ${WALLET_DUMP}
-  echo "${NAME} - Securely deleting the plaintext wallet dumps using shred..."
-  shred -vfzu ${WALLET_DUMP}
-  echo "Note that if you open the encrypted files in TAILS, they will be automatically decrypted."
+  echo "Your dumped keys:"
+  echo "${DUMP_DIR}"
 }
 
 # Execute
@@ -98,7 +106,6 @@ case $YN in
   start_daemon
   unlock
   dump_keys
-  encrypt_keyfiles_and_cleanup
   ;;
   [Nn]* )
   echo "END."

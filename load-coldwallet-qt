@@ -1,5 +1,7 @@
 #!/bin/bash
+
 # ------------------------------------------------------------------------------
+
 set -o nounset
 set -o errexit
 
@@ -11,6 +13,19 @@ PROJECT_ROOT=$(dirname $THIS)
 . ${PROJECT_ROOT}/lib/setup-cold-wallet
 
 select_coin
-setup_binaries
+read -p "Setup Binaries for ${COIN}? [y/N]" PROCEED
+case $PROCEED in
+  [Yy]* )
+  setup_binaries
+  ;;
+  [Nn]* )
+  echo "No setup of binaries."
+  ;;
+  * ) echo "Please answer yes or no."
+  ;;
+esac
 
-${COIN}-qt
+select_cold_wallet
+copy_wallet
+
+${COIN}-qt -wallet=cold-wallet.dat

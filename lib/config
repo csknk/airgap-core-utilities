@@ -2,7 +2,8 @@
 BITCOIN_CORE_BIN_DIR="${PROJECT_ROOT}/bitcoin-0.15.1/bin"
 LITECOIN_CORE_BIN_DIR="${PROJECT_ROOT}/litecoin-0.15.0/bin"
 
-RED='\033[0;31m'
+RED='\033[38;5;255;48;5;124m'
+GREEN='\033[38;5;255;48;5;34m'
 YELLOW='\033[1;33m'
-BLUE='\033[1;34m' # Light blue
+BLUE='\033[1;34m'
 NC='\033[0m' # No Color
