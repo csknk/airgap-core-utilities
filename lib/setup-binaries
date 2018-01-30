@@ -1,8 +1,8 @@
 #!/bin/bash
-# Set up binaries for either Bitcoin or Litecoin.
-# The location of the directory that contains the relevant binaries can be set in
-# `/lib/config`. If you do not set a location here, a Zenity GUI will run that
-# prompts the user to select the directory that contains the relevant binaries.
+# Set up binaries for either Bitcoin or Litecoin. The location of the directory
+# that contains the relevant binaries can be set in # `/lib/config`. If you do
+# not set a location here, a Zenity GUI will run that prompts the user to select
+# the directory that contains the relevant binaries.
 
 set -o nounset
 set -o errexit

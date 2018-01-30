@@ -1,10 +1,6 @@
 #!/bin/bash
 
 # ------------------------------------------------------------------------------
-<<<<<<< HEAD
-
-=======
->>>>>>> 4e59b47141f0994c71cf0cbb1d299c67f17589ce
 set -o nounset
 set -o errexit
 
@@ -16,7 +12,6 @@ PROJECT_ROOT=$(dirname $THIS)
 . ${PROJECT_ROOT}/lib/setup-cold-wallet
 
 select_coin
-<<<<<<< HEAD
 read -p "Setup Binaries for ${COIN}? [y/N]" PROCEED
 case $PROCEED in
   [Yy]* )
@@ -28,10 +23,6 @@ case $PROCEED in
   * ) echo "Please answer yes or no."
   ;;
 esac
-
-=======
-setup_binaries
->>>>>>> 4e59b47141f0994c71cf0cbb1d299c67f17589ce
 select_cold_wallet
 copy_wallet
 

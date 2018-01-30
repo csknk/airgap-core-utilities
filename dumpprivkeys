@@ -3,8 +3,7 @@
 # This script runs `dumpprivkey` by safely unlocking the encrypted wallet and iterating
 # over a list of supplied public addresses.
 # See: https://bitcoin.org/en/developer-reference#dumpprivkey
-# If necessary, prompt user for a custom data directory...in this context, we will not
-# be using a custom data directory, so leave this variable set to false.
+#
 # Note that port 8332 needs to be open to allow bitcoin-cli to communicate with bitcoind.
 # By default, this port is closed in TAILS - so we need to add an appropriate
 # iptables rule.
@@ -17,21 +16,9 @@ PROJECT_ROOT=$(dirname $THIS)
 . ${PROJECT_ROOT}/lib/select-coin
 . ${PROJECT_ROOT}/lib/setup-binaries
 . ${PROJECT_ROOT}/lib/setup-cold-wallet
-NAME=$0
 CUSTOM_DATA_DIR='false'
 
 read -p "Set up Binaries? [y/N]" PROCEED_BINARIES
-<<<<<<< HEAD
-case $PROCEED_BINARIES in
-  [Yy]* )
-  select_coin
-  setup_binaries
-  ;;
-  [Nn]* )
-  echo "Proceeding without setup of binaries..."
-  select_coin
-=======
-
 case $PROCEED_BINARIES in
   [Yy]* )
     select_coin
@@ -40,13 +27,11 @@ case $PROCEED_BINARIES in
   [Nn]* )
     echo "Proceeding without setup of binaries..."
     select_coin
->>>>>>> 4e59b47141f0994c71cf0cbb1d299c67f17589ce
   ;;
   * ) echo "Please answer yes or no.";;
 esac
 
 read -p "Do you wish to set up a cold wallet? [y/N]" PROCEED
-<<<<<<< HEAD
 case $PROCEED in
   [Yy]* )
   select_cold_wallet
@@ -55,17 +40,6 @@ case $PROCEED in
   ;;
   [Nn]* )
   echo "END"
-=======
-
-case $PROCEED in
-  [Yy]* )
-    select_cold_wallet
-    copy_wallet
-    WALLET_NAME=$(basename "${WALLET_FILE}")
-  ;;
-  [Nn]* )
-    echo "END"
->>>>>>> 4e59b47141f0994c71cf0cbb1d299c67f17589ce
   ;;
   * ) echo "Please answer yes or no.";;
 esac
@@ -80,9 +54,7 @@ function unlock {
 }
 
 # Use bitcoin-cli dumpprivkey command to output private keys for specified public
-# addresses.
-#
-# The private key for each address is encrypted into a file whose filename
+# addresses. The private key for each address is encrypted into a file whose filename
 # corresponds to the public address. Uses GPG to symmetrically encrypt the dumped
 # private key files, then securely deletes the originals using the shred utility.
 # ------------------------------------------------------------------------------
