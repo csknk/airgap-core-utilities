@@ -1,15 +1,20 @@
 #!/bin/bash
-# Set up binaries for either Bitcoin or Litecoin. The location of the directory
-# that contains the relevant binaries can be set in # `/lib/config`. If you do
-# not set a location here, a Zenity GUI will run that prompts the user to select
-# the directory that contains the relevant binaries.
+# Set up binaries for either Bitcoin or Litecoin.
+#
+# The location of the directory that contains the relevant binaries can be set
+# in # `/lib/config`. If you do not set a location here, a Zenity GUI will run
+# that prompts the user to select the directory that contains the relevant binaries.
+#
+# The programme binaries are symlinked into `$HOME/bin`. This directory is not in
+# `$PATH` by default, so a new $PATH variable is exported for the duration of
+# this script. The `$PATH` is amended thereafter by appending a line to
+# `$HOME/.bashrc`, so that the user can access commands like `bitcoin-qt` when
+# the script has finished. However, you need to start a new shell
+# (or `source ~/.bashrc`) for this to work.
 
 set -o nounset
 set -o errexit
 
-# If a value for the directory path to the binary files has not been set, use
-# Zenity to allow the user to select it.
-# ------------------------------------------------------------------------------
 function set_binary_dir {
   if [[ ${OPT} == "Bitcoin" ]]; then
     CORE_DIR=${BITCOIN_CORE_BIN_DIR}
@@ -37,8 +42,6 @@ function set_binary_dir {
   esac
 }
 
-# Set up commands for daemon, command line client and GUI.
-# ------------------------------------------------------------------------------
 function set_commands {
   echo -e ${YELLOW}
   echo "-----------------------------------------------------------------------"
@@ -46,24 +49,34 @@ function set_commands {
   echo "-----------------------------------------------------------------------"
   echo -e ${NC}
 
+  BIN_DIR=$HOME/bin
+  mkdir -p ${BIN_DIR}
+  THIS=$(readlink -f ${BASH_SOURCE[0]})
+  PROJECT_ROOT=$(dirname $THIS)
+
+  . ${PROJECT_ROOT}/set-path $BIN_DIR
+  echo "export PATH=$BIN_DIR:$PATH" >> $HOME/.bashrc
+
   read -p "Do you wish to proceed? [y/N]" PROCEED
   case $PROCEED in
     [Yy]* )
-    cd /usr/local/bin &&
-    sudo rm -f ${COIN}-cli ${COIN}d ${COIN}-qt
-    sudo ln -s ${CORE_DIR}/${COIN}-cli ${COIN}-cli
-    sudo ln -s ${CORE_DIR}/${COIN}d ${COIN}d
-    sudo ln -s ${CORE_DIR}/${COIN}-qt ${COIN}-qt
+    cd ${BIN_DIR} &&
+    rm -f ${COIN}-cli ${COIN}d ${COIN}-qt
+    ln -s ${CORE_DIR}/${COIN}-cli ${COIN}-cli
+    ln -s ${CORE_DIR}/${COIN}d ${COIN}d
+    ln -s ${CORE_DIR}/${COIN}-qt ${COIN}-qt
     echo "Symlinks added. To run binaries:"
     echo "${COIN}-cli"
     echo "${COIN}d"
     echo "${COIN}-qt"
+    echo "...in a new shell."
     ;;
     [Nn]* )
     echo "No symlinks added. To run binaries:"
     echo "${CORE_DIR}/${COIN}-cli"
     echo "${CORE_DIR}/${COIN}d"
     echo "${CORE_DIR}/${COIN}-qt"
+    echo "...in a new shell."
     ;;
     * ) echo "Please answer yes or no."
     ;;
