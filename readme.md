@@ -44,14 +44,14 @@ Double (triple) check this by re-loading the cold wallet **BEFORE** sending fund
 
 Suggested workflow:
 
-* Load a fresh wallet: `./load-fresh-core-qt`
-* Encrypt this with a secure passphrase
+* Load a fresh wallet: `./load-fresh-core-qt` - this will start up the `bitcoin-qt` GUI client
+* Encrypt the wallet with a secure passphrase
 * Securely store the passphrase
 * Back the wallet up to an appropriate persistent drive (NOT the Tails home directory) with an appropriate name
 * Quit the core client
 * Run `./load-coldwallet-qt` from `~/Persistent/airgap-core-utilities`
-* When prompted, select the wallet you just saved
-* In the core QT GUI, generate labelled receiving addresses
+* When prompted, select the wallet you just saved (you don't need to install binaries again)
+* In the `bitcoin-qt` GUI, generate labelled receiving addresses
 * Export receiving adresses in CSV format, saving these to a persistent drive
 * Close the core client again
 * Reload the cold wallet again
