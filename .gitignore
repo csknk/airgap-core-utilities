@@ -1,5 +1,7 @@
 bitcoin-0.15.1/*
+bitcoin-0.16.0/*
 litecoin-0.15.0/
 
-!litecoin-0.15.0/.gitkeep
+!bitcoin-0.15.1/.gitkeep
+!bitcoin-0.16.0/.gitkeep
 !litecoin-0.15.0/.gitkeep
