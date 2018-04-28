@@ -1,5 +1,5 @@
 #!/bin/bash
-BITCOIN_CORE_BIN_DIR="${PROJECT_ROOT}/bitcoin-0.15.1/bin"
+BITCOIN_CORE_BIN_DIR="${PROJECT_ROOT}/bitcoin-0.16.0/bin"
 LITECOIN_CORE_BIN_DIR="${PROJECT_ROOT}/litecoin-0.15.0/bin"
 
 RED='\033[38;5;255;48;5;124m'
