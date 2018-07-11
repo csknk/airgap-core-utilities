@@ -1,15 +1,24 @@
 #!/bin/bash
 #
-# This script runs `dumpprivkey` by safely unlocking the encrypted wallet and iterating
-# over a list of supplied public addresses.
+# This script uses bitcoin-cli dumpprivkey command to output private keys for
+# specified public addresses. The private key for each address is encrypted into
+# a file whose filename corresponds to the public address. Uses GPG to
+# symmetrically encrypt the dumped private key files, then securely deletes the
+# originals using the shred utility.
+#
+# Designed for use in an offline Tails session.
+#
 # See: https://bitcoin.org/en/developer-reference#dumpprivkey
 #
 # Note that port 8332 needs to be open to allow bitcoin-cli to communicate with bitcoind.
 # By default, this port is closed in TAILS - so we need to add an appropriate
 # iptables rule.
 # ------------------------------------------------------------------------------
-set -o nounset
-set -o errexit
+set -o nounset # same as set -u
+set -o errexit # same as set -e
+trap 'last_command=$current_command; current_command=$BASH_COMMAND' ERR
+trap 'echo "\"${last_command}\" command filed with exit code $?."' ERR
+
 THIS=$(readlink -f ${BASH_SOURCE[0]})
 PROJECT_ROOT=$(dirname $THIS)
 . ${PROJECT_ROOT}/lib/config
@@ -57,11 +66,11 @@ function select_passphrase_file {
   ENCRYPTED_PASSPHRASE=$(zenity --file-selection --title="Select a file that contains an encrypted passphrase." --filename=~/)
   case $? in
     0)
-    echo "\"${ENCRYPTED_PASSPHRASE}\" selected.";;
+      echo "\"${ENCRYPTED_PASSPHRASE}\" selected.";;
     1)
-    echo "No file selected.";;
+      echo "No file selected.";;
     -1)
-    echo "An unexpected error has occurred.";;
+      echo "An unexpected error has occurred.";;
   esac
 }
 
@@ -69,11 +78,11 @@ function create_passphrase_file {
   PASSPHRASE_FILE=$(zenity --file-selection --save --title="Create a file that will contain your encrypted passphrase file. This file should be kept permanently offline." --filename=~/)
   case $? in
     0)
-    echo "\"${PASSPHRASE_FILE}\" selected.";;
+      echo "\"${PASSPHRASE_FILE}\" selected.";;
     1)
-    echo "No file selected.";;
+      echo "No file selected.";;
     -1)
-    echo "An unexpected error has occurred.";;
+      echo "An unexpected error has occurred.";;
   esac
   echo "Creating passphrase file using openssl..."
   # Note that openssl rand -base64 adds a newline at char 65
@@ -83,11 +92,6 @@ function create_passphrase_file {
   ENCRYPTED_PASSPHRASE=${PASSPHRASE_FILE}.gpg
 }
 
-# Use bitcoin-cli dumpprivkey command to output private keys for specified public
-# addresses. The private key for each address is encrypted into a file whose filename
-# corresponds to the public address. Uses GPG to symmetrically encrypt the dumped
-# private key files, then securely deletes the originals using the shred utility.
-# ------------------------------------------------------------------------------
 function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
   DUMP_DIR=~/${COIN}-dumpwallet-${WALLET_NAME}
@@ -101,11 +105,11 @@ function dump_keys {
   PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
   case $? in
     0)
-    echo "\"${PUB_ADDRESSES_LIST}\" selected.";;
+      echo "\"${PUB_ADDRESSES_LIST}\" selected.";;
     1)
-    echo "No file selected.";;
+      echo "No file selected.";;
     -1)
-    echo "An unexpected error has occurred.";;
+      echo "An unexpected error has occurred.";;
   esac
 
   echo "Your private keys will be encrypted symmetrically using GPG."
@@ -113,16 +117,15 @@ function dump_keys {
   echo "NOTE: The encrypted passphrase file should be held offline."
   read -p "Do you want to do select an existing passphrase file? [y/N]" YN
   case $YN in
-    [Yy]* )
-    select_passphrase_file
-    ;;
-    [Nn]* )
-    create_passphrase_file
-    ;;
-    * ) echo "Please answer yes or no.";;
+    [Yy]*)
+      select_passphrase_file ;;
+    [Nn]*)
+      create_passphrase_file ;;
+    *) echo "Please answer yes or no.";;
   esac
 
-  # Decrypt the passphrase so that it can be used
+  # Create a temporary file containing the plaintext passphrase. Read this into
+  # a variable, then securely delete the file.
   gpg -o temp-decrypted-passphrase --passphrase ${MAIN_PASS} --decrypt ${ENCRYPTED_PASSPHRASE}
   GPG_PASS=$(< temp-decrypted-passphrase)
   shred -vfzu temp-decrypted-passphrase
@@ -168,8 +171,9 @@ plaintext temporary files are then securely deleted by means of the shred utilit
 
 Notes on Encryption
 -------------------
-If you choose to generate an encryption passphrase (recommnded), a 64 character
-base 64 random number is generated using the openssl rand command.
+If you choose to generate an encryption passphrase (recommended), a 64 character
+base 64 random number is generated using the openssl rand command. This
+is then used as a passphrase for GPG symmetric encryption of private keys.
 
 Once your private keys are encrypted, it should be safe to expose them on an
 online computer for the purposes of backup. To ensure security however, the
@@ -203,19 +207,22 @@ corresponding Bitcoin public address in the filename.
 The directory will contain a readme.md file that consists of a manifest showing
 the addresses backed up, and decryption instructions.
 
+References
+----------
+- dumprivkey: https://bitcoin.org/en/developer-reference#dumpprivkey
+
 --------------------------------------------------------------------------------
 
 EOF
 read -p "Do you want to proceed? [y/N]" YN
 case $YN in
-  [Yy]* )
-  open_port
-  start_daemon
-  unlock
-  dump_keys
-  ;;
-  [Nn]* )
-  echo "END."
-  ;;
-  * ) echo "Please answer yes or no.";;
+  [Yy]*)
+    open_port
+    start_daemon
+    unlock
+    dump_keys
+    ;;
+  *)
+    echo "Programme terminated."
+    ;;
 esac
