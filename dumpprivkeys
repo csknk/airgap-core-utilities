@@ -20,11 +20,11 @@ trap 'last_command=$current_command; current_command=$BASH_COMMAND' ERR
 trap 'echo "\"${last_command}\" command filed with exit code $?."' ERR
 
 THIS=$(readlink -f ${BASH_SOURCE[0]})
-PROJECT_ROOT=$(dirname $THIS)
-. ${PROJECT_ROOT}/lib/config
-. ${PROJECT_ROOT}/lib/select-coin
-. ${PROJECT_ROOT}/lib/setup-binaries
-. ${PROJECT_ROOT}/lib/setup-cold-wallet
+PROJECT_ROOT=$(dirname "${THIS}")
+. "${PROJECT_ROOT}"/lib/config
+. "${PROJECT_ROOT}"/lib/select-coin
+. "${PROJECT_ROOT}"/lib/setup-binaries
+. "${PROJECT_ROOT}"/lib/setup-cold-wallet
 CUSTOM_DATA_DIR='false'
 
 read -p "Set up Binaries? [y/N]" PROCEED_BINARIES
@@ -134,7 +134,7 @@ function dump_keys {
   echo "============================================" >> ${DUMP_DIR}/readme.md
   echo "This directory contains private keys for the following public addresses:" >> ${DUMP_DIR}/readme.md
 
-  PUB_ADDRESSES="$(< ${PUB_ADDRESSES_LIST})"
+  PUB_ADDRESSES=$(< "${PUB_ADDRESSES_LIST}")
   for PUB in $PUB_ADDRESSES; do
     PRIV=$(${COIN}-cli dumpprivkey ${PUB})
     echo "${PUB}" >> ${DUMP_DIR}/readme.md
@@ -224,5 +224,6 @@ case $YN in
     ;;
   *)
     echo "Programme terminated."
+    exit
     ;;
 esac
