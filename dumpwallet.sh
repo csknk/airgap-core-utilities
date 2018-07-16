@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2018 David Egan
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #
 # This script runs `dumpprivkey` by safely unlocking the encrypted wallet and iterating
 # over a list of supplied public addresses.
@@ -70,7 +73,7 @@ function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
   DUMP_DIR=~/${COIN}-dumpwallet-${DATE}
   mkdir -p ${DUMP_DIR}
-  WALLET_DUMP=${DUMP_DIR}/wallet-dump  
+  WALLET_DUMP=${DUMP_DIR}/wallet-dump
   ${COIN}-cli dumpwallet ${WALLET_DUMP}
   ${COIN}-cli walletlock
   ${COIN}-cli stop

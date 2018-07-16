@@ -1,6 +1,8 @@
 bitcoin-0.15.1/*
 bitcoin-0.16.0/*
 litecoin-0.15.0/*
+bak/*
+lib/bak/*
 
 !bitcoin-0.15.1/.gitkeep
 !bitcoin-0.16.0/.gitkeep

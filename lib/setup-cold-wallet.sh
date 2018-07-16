@@ -1,12 +1,16 @@
 #!/bin/bash
+# Copyright (c) 2018 David Egan
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+#
 # Open a Bitcoin Core or Litecoin core cold wallet in an offline Tails session.
 # - Setup Bitcoin/Litecoin binaries
 # - Select a cold wallet
 # - Move cold wallet to the default data directory
+# ------------------------------------------------------------------------------
 
 set -o nounset
 set -o errexit
-# ------------------------------------------------------------------------------
 
 function select_cold_wallet {
   WALLET_FILE=$(zenity --file-selection --title="Select a Cold Wallet to run." --filename=${PWD})

@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) 2018 David Egan
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+#
 # Set up binaries for either Bitcoin or Litecoin.
 #
 # The location of the directory that contains the relevant binaries can be set
@@ -11,7 +15,7 @@
 # `$HOME/.bashrc`, so that the user can access commands like `bitcoin-qt` when
 # the script has finished. However, you need to start a new shell
 # (or `source ~/.bashrc`) for this to work.
-
+# ------------------------------------------------------------------------------
 set -o nounset
 set -o errexit
 

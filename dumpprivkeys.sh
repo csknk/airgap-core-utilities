@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) 2018 David Egan
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #
 # This script uses bitcoin-cli dumpprivkey command to output private keys for
 # specified public addresses. The private key for each address is encrypted into
@@ -87,7 +90,6 @@ function create_passphrase_file {
   echo "Creating passphrase file using openssl..."
   # Note that openssl rand -base64 adds a newline at char 65 so we remove this with tr
   openssl rand -base64 64 | tr -d '\n ' > ${PASSPHRASE_FILE}
-  # gpg --armor --output ${PASSPHRASE_FILE}.gpg --batch --passphrase ${MAIN_PASS} --symmetric ${PASSPHRASE_FILE}
   gpg --armor --output ${PASSPHRASE_FILE}.gpg --batch --symmetric ${PASSPHRASE_FILE}
   shred -vfzu ${PASSPHRASE_FILE}
   ENCRYPTED_PASSPHRASE=${PASSPHRASE_FILE}.gpg
@@ -97,10 +99,6 @@ function dump_keys {
   DATE=$(date "+%Y-%m-%d-%H:%M:%S")
   DUMP_DIR=~/${COIN}-dumpwallet-${WALLET_NAME}
   mkdir -p ${DUMP_DIR}
-
-  #echo "Enter the main passphrase."
-  #echo "This will be used to decrypt the passphrase that will be used for GPG encryption:"
-  #read -s MAIN_PASS
 
   echo "Select a File that contains a list of public addresses to backup."
   PUB_ADDRESSES_LIST=$(zenity --file-selection --title="Select a file that contains a list of public addresses to be dumped." --filename=~/)
@@ -128,7 +126,6 @@ function dump_keys {
   # Create a temporary file containing the plaintext passphrase. Read this into
   # a variable, then securely delete the file.
   echo "Decrypt the passphrase..."
-  #gpg -o temp-decrypted-passphrase --passphrase ${MAIN_PASS} --decrypt ${ENCRYPTED_PASSPHRASE}
   gpg -o temp-decrypted-passphrase --decrypt ${ENCRYPTED_PASSPHRASE}
   GPG_PASS=$(< temp-decrypted-passphrase)
   shred -vfzu temp-decrypted-passphrase

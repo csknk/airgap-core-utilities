@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright (c) 2018 David Egan
+# Distributed under the MIT software license, see the accompanying
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
+# ------------------------------------------------------------------------------
 BITCOIN_CORE_BIN_DIR="${PROJECT_ROOT}/bitcoin-0.16.0/bin"
 LITECOIN_CORE_BIN_DIR="${PROJECT_ROOT}/litecoin-0.15.0/bin"
 
