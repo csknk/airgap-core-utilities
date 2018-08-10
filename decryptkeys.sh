@@ -35,7 +35,7 @@ function select_passphrase_file {
 }
 
 function select_output_dir {
-  OUTPUT_DIR=$(zenity --file-selection --directory --title="Select a directory in which to save the DECRYPTED key.")
+  OUTPUT_DIR=$(zenity --file-selection --title="Select a directory in which to save the DECRYPTED key." --directory)
   case $? in
     0)
     echo "\"${OUTPUT_DIR}\" selected.";;
@@ -47,15 +47,17 @@ function select_output_dir {
 }
 
 function decrypt_key {
-  echo "Enter the main passphrase."
-  echo "This will be used to decrypt the passphrase that will be used for GPG decryption:"
-  read -s MAIN_PASS
-  gpg -o temp-decrypted-passphrase --passphrase ${MAIN_PASS} --decrypt ${ENCRYPTED_PASSPHRASE}
+  #gpg -o temp-decrypted-passphrase --passphrase ${MAIN_PASS} --decrypt ${ENCRYPTED_PASSPHRASE}
+  gpg -o temp-decrypted-passphrase --decrypt "${ENCRYPTED_PASSPHRASE}"
   GPG_PASS=$(< temp-decrypted-passphrase)
+  echo "passphrase is ${GPG_PASS}"
+  echo "---------------------------------"
   shred -vfzu temp-decrypted-passphrase
   echo "Decrypting key..."
   FILENAME=$(basename "${PRIVATE_KEY}").txt
-  gpg -o ${OUTPUT_DIR}/${FILENAME} --passphrase ${GPG_PASS} --decrypt ${PRIVATE_KEY}
+  echo "Decrypting ${PRIVATE_KEY} to ${OUTPUT_DIR}/${FILENAME}"
+  echo ${GPG_PASS} | gpg --batch -o "${OUTPUT_DIR}/${FILENAME}" --passphrase-fd 0 "${PRIVATE_KEY}"
+  #gpg --batch -o "${OUTPUT_DIR}/${FILENAME}" --passphrase ${GPG_PASS} --symmetric --decrypt "${PRIVATE_KEY}"
 
 }
 

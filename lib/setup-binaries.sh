@@ -58,7 +58,7 @@ function set_commands {
   THIS=$(readlink -f ${BASH_SOURCE[0]})
   PROJECT_ROOT=$(dirname $THIS)
 
-  . ${PROJECT_ROOT}/set-path $BIN_DIR
+  . "${PROJECT_ROOT}"/set-path $BIN_DIR
   echo "export PATH=$BIN_DIR:$PATH" >> $HOME/.bashrc
 
   read -p "Do you wish to proceed? [y/N]" PROCEED
