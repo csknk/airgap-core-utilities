@@ -1,15 +1,19 @@
 #!/bin/bash
-# Copyright (c) 2018 David Egan
+# Copyright (c) 2019i David Egan
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #
-# This script uses bitcoin-cli dumpprivkey command to output private keys for
-# specified public addresses. The private key for each address is encrypted into
-# a file whose filename corresponds to the public address. Uses GPG to
-# symmetrically encrypt the dumped private key files, then securely deletes the
-# originals using the shred utility.
+# This script is intended for use in an offline Tails session.
 #
-# Designed for use in an offline Tails session.
+# The bitcoin-cli dumpprivkey command is used to output private keys for specified public addresses. The public
+# addresses should be stored in a manifest file, with one address per line. The script allows the mainfest
+# file to be selected by means of a zenity GUI dialogue.
+#
+# The private key for each address is encrypted into a file whose filename corresponds to the public address.
+# 
+# The script uses GPG to symmetrically encrypt the dumped private key files, which requires a password. The
+# original dumped files are securely deleted by means of the shred utility.
+#
 #
 # See: https://bitcoin.org/en/developer-reference#dumpprivkey
 #
