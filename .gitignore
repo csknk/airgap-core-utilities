@@ -5,6 +5,7 @@ bitcoin-0.16.2/*
 litecoin-0.15.0/*
 bak/*
 lib/bak/*
+share-secrets
 
 !bitcoin-0.15.1/.gitkeep
 !bitcoin-0.16.0/.gitkeep
