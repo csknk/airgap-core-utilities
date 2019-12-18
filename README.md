@@ -22,13 +22,23 @@ A lot of the same functionality is required by the various scripts, so I've adde
 All commands provide an option to set up binaries - either Bitcoin or Litecoin. You will generally only need to do this step once per Tails session.
 
 ### Dump Private Keys: `dumpprivkeys`
-Loads a cold wallet, loops through a list of public addresses and builds a collection of GnuPG encrypted output files that contain the associated private keys.
+This script loads a cold wallet, loops through a list of public addresses and builds a collection of GnuPG encrypted output files that contain the associated private keys.
 
-Before running, create a text file that consists of the public addresses for the keys you want to back up, each on a separate line.
+Before running, create a text file that consists of the public addresses for the keys you want to back up, with each address on a separate line.
 
 The script uses the `bitcoin-cli dumpprivkey` command to output private keys for specified public addresses. The private key for each address is encrypted into a file whose filename corresponds to the public address. These can be used as a paper backup, or as a convenient way of accessing funds held in individual addresses without breaking the "cold" status of the wallet.
 
 GnuPG is used to symmetrically encrypt the dumped private key files. The intermediate (unencrypted) dumped private key files are securely deleted using the [shred](https://www.gnu.org/software/coreutils/manual/html_node/shred-invocation.html) utility.
+
+If you choose to generate an encryption passphrase (recommended if you do not have a strong passphrase), a 64 character base 64 random number is generated using the openssl rand command. This
+is then used as a passphrase for GPG symmetric encryption of the private keys.
+
+Once private keys are encrypted, it should be safe to expose them on an online computer or print them for the purposes of backup. __To ensure security however, the encryption passphrase should remain offline__ - it should never be loaded onto an online or otherwise potentially insecure computer.
+
+In order to make it possible to print the encryption passphrase for backup purposes, the encryption passphrase is itself ecrypted, using the master
+passphrase of your security system. This allows you to safely lodge backup paper copies of the encryption passphrase without compromising security. Note
+that your master passphrase should be backed up using Shamir's Secret Sharing Scheme or similar protocol.
+
 
 ### Check Passphrase: `check-passphrase`
 Loads a cold wallet and allows the user to check the passphrase.
