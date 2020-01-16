@@ -18,11 +18,10 @@ A lot of the same functionality is required by the various scripts, so I've adde
 * Boot into Tails, navigate to `~/Persistent/airgap-core-utilities`
 * Run commands (e.g. `cd ~/Persistent/airgap-core-utilities` followed by `./check-passphrase`)
 
-## Available Commands
 All commands provide an option to set up binaries - either Bitcoin or Litecoin. You will generally only need to do this step once per Tails session.
 
-### Dump Private Keys: `dumpprivkeys`
-This script loads a cold wallet, loops through a list of public addresses and builds a collection of GnuPG encrypted output files that contain the associated private keys.
+## Dump Private Keys
+The `dumpprivkeys` script loads a cold wallet, loops through a list of public addresses and builds a collection of GnuPG encrypted output files that contain the associated private keys.
 
 Before running, create a text file that consists of the public addresses for the keys you want to back up, with each address on a separate line.
 
@@ -40,10 +39,10 @@ passphrase of your security system. This allows you to safely lodge backup paper
 that your master passphrase should be backed up using Shamir's Secret Sharing Scheme or similar protocol.
 
 
-### Check Passphrase: `check-passphrase`
+## Check Passphrase: `check-passphrase`
 Loads a cold wallet and allows the user to check the passphrase.
 
-### Load a Fresh Core Client: `load-fresh-core-qt`
+## Load a Fresh Core Client: `load-fresh-core-qt`
 Run a clean instance of either Bitcoin or Litecoin core. Useful when creating a new cold wallet.
 
 IMPORTANT: **Remember to double check that you have stored a copy of the right wallet.**
@@ -69,12 +68,10 @@ Suggested workflow:
 * If necessary, check the passphrase by running `./check-passphrase`
 * Save the wallet and passphrase (in an encrpted database like KeePassX) in at least two locations before sending funds
 
-### Load Cold Wallet: `load-coldwallet-qt`
+## Load Cold Wallet: `load-coldwallet-qt`
 Launch a specified cold wallet in the Core QT client.
 
 Useful for checking receiving addresses, or adding extra receiving addresses.
 
-## Update
-As of v0.15.0, the Bitcoin Core client will not allow symlinked wallets. As such, the script will copy your specified cold wallet into the default Bitcoin data directory: (`~/.bitcoin/cold-wallet.dat`).
 
 This script is designed to run in a TAILS session in which the `~/.bitcoin` directory won't be persisted after shutting down. Because of this, the script does not remove the copied cold wallet file. This may be important if you run the script in a live environment.

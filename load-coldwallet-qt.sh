@@ -16,14 +16,15 @@ PROJECT_ROOT=$(dirname $THIS)
 select_coin
 read -p "Setup Binaries for ${COIN}? [y/N]" PROCEED
 case $PROCEED in
-  [Yy]* )
-  setup_binaries
-  ;;
-  [Nn]* )
-  echo "No setup of binaries."
-  ;;
-  * ) echo "Please answer yes or no."
-  ;;
+	[Yy]*)
+		setup_binaries
+		;;
+	[Nn]*)
+		echo "No setup of binaries."
+		;;
+	*)i
+		echo "Please answer yes or no."
+		;;
 esac
 select_cold_wallet
 copy_wallet
